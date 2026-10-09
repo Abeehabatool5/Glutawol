@@ -1,0 +1,13 @@
+/* fallback so popups, gate and show/hide never depend on Tailwind loading */.hidden{display:none!important}.mdl{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.8);z-index:50;display:none;align-items:center;justify-content:center;padding:12px}.mdl.flex{display:flex}#shield{position:fixed;top:0;right:0;bottom:0;left:0;z-index:45}#cart{position:fixed;top:0;right:0;bottom:0;z-index:50}
+
+/* Premium motion and interaction polish */
+html{scroll-behavior:smooth}
+body{animation:pageEnter .55s ease-out both}
+header{transition:box-shadow .25s ease}
+header:hover{box-shadow:0 8px 28px rgba(14,165,233,.08)}
+button,a,.card{transition:transform .22s ease,filter .22s ease,box-shadow .22s ease}
+button:hover{filter:brightness(1.08)}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.18)}
+@keyframes pageEnter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
