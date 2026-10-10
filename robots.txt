@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /LoginABEEHA
+Sitemap: https://www.glutawall.com/sitemap.xml

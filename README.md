@@ -1,18 +1,15 @@
-# Glutawol Skincare Website
+# Glutawol Website (Netlify + Supabase ready)
+Files: index.html (everything inside: CSS + JS), netlify.toml, robots.txt, sitemap.xml, supabase-setup.sql
 
-## Folder structure
-- `index.html` — website layout and Tailwind utility styling
-- `css/style.css` — fallback styles and animations
-- `js/app.js` — website interactions and current browser-storage logic
-- `netlify.toml` — Netlify routing for the owner login path
+## Netlify
+Drag this whole folder to app.netlify.com > Add new site > Deploy manually. Then replace `www.glutawall.com` with your real domain in index.html, robots.txt, sitemap.xml.
 
-## Run locally
-Open `index.html` in a browser. An internet connection is needed for the Tailwind CDN and remote product images.
+## Supabase (optional, shares products/prices/rates/reviews/promos/site text across devices)
+1. Create project, run supabase-setup.sql (put your email in it).
+2. Authentication > Users > Add user (your owner email + password). Turn OFF public sign-ups.
+3. Put Project URL + anon key in the "config.js" block inside index.html (search for GW_CONFIG). Never use the service_role key.
+4. Owner panel then asks for email + password. First login uploads your current data to the cloud.
+Orders, complaints and customer accounts stay in the visitor's browser (they contain phone numbers/passwords).
 
-## Publish with GitHub Pages
-1. Upload the contents of this folder to the root of your GitHub repository.
-2. Open **Settings → Pages**.
-3. Under **Build and deployment**, choose **Deploy from a branch**, select `main` and `/ (root)`, then save.
-
-## Owner route
-The configured private entry path is `/LoginABEEHA`. The existing site uses browser `localStorage`; this is not secure server-side authentication and data is not shared between devices. For a production site, connect a backend such as Supabase and use server-side authorization. Do not treat the demo password stored in browser code/storage as secure.
+## SEO
+Google Search Console > add site > submit /sitemap.xml.
