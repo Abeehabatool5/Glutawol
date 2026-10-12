@@ -76,9 +76,12 @@ button:hover{filter:brightness(1.08)}
 header.scrolled{box-shadow:0 6px 24px rgba(0,0,0,.35)}header.scrolled>div{padding-top:.4rem;padding-bottom:.4rem}header>div{transition:padding .25s}
 
 /* Fallback so the cart drawer hides/shows even if Tailwind CDN is slow or blocked */
-#cart{width:100%;max-width:28rem;background:#031b25;display:flex;flex-direction:column;transition:transform .3s ease}
-#cart.translate-x-full{transform:translateX(100%)}
-#cart:not(.translate-x-full){transform:none}
+#cart{width:100%;max-width:28rem;background:#031b25;display:none;flex-direction:column}
+#cart.open{display:flex;animation:cartIn .3s ease}
+@keyframes cartIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+#auth{z-index:60}
+.mdl>div{background:#052d30;color:#e7f6fb;border-radius:16px;padding:20px;max-width:28rem;width:100%}#cart{color:#e7f6fb}
+html,body{max-width:100%;overflow-x:hidden}
 #admin>div,#pmodal>div{max-height:92vh;overflow-y:auto;width:100%}
 #admin>div{max-width:64rem}#pmodal>div{max-width:42rem}
 
@@ -225,6 +228,13 @@ header.scrolled{box-shadow:0 6px 24px rgba(0,0,0,.35)}header.scrolled>div{paddin
  <button id="auth-x" onclick="closeAuth()" class="hidden absolute top-3 right-4 text-2xl text-gray-400 hover:text-white">×</button>
  <div class="text-center mb-4"><b class="gt font-serif text-2xl tracking-widest">GLUTAWOL</b>
   <p id="auth-note" class="text-xs text-sky-200 mt-2">Website dekhne ke liye pehle Sign Up ya Login karein.</p></div>
+ <div id="auth-role" class="space-y-3">
+  <p class="text-center text-sm text-sky-100 font-bold">Aap kaun hain?</p>
+  <button onclick="pickRole('customer')" class="btn w-full py-4 text-sm">👤 Customer (Login / Sign Up)</button>
+  <button onclick="pickRole('owner')" class="btn2 w-full py-4 text-sm">🛡️ Owner (Admin Portal)</button>
+ </div>
+ <div id="auth-main" class="hidden">
+ <button id="auth-back" onclick="backRole()" class="text-xs text-sky-300 mb-3">← Wapas</button>
  <div class="flex border-b border-sky-400/30 mb-5">
   <button id="t-login" onclick="authTab('login')" class="flex-1 py-2 text-sm font-bold">Login</button>
   <button id="t-signup" onclick="authTab('signup')" class="flex-1 py-2 text-sm font-bold">Sign Up</button>
@@ -242,6 +252,7 @@ header.scrolled{box-shadow:0 6px 24px rgba(0,0,0,.35)}header.scrolled>div{paddin
   <button class="btn w-full py-3">Create Account</button>
  </form>
  <button id="logout" onclick="doLogout()" class="hidden btn2 w-full mt-3">Logout</button>
+ </div>
 </div></div>
 
 <!-- PRODUCT MODAL -->
@@ -251,7 +262,7 @@ header.scrolled{box-shadow:0 6px 24px rgba(0,0,0,.35)}header.scrolled>div{paddin
 </div></div>
 
 <!-- CART -->
-<div id="cart" class="fixed inset-y-0 right-0 w-full max-w-md bg-[#031b25] border-l border-sky-400/30 z-50 translate-x-full transition-transform duration-300 flex flex-col">
+<div id="cart" class="fixed inset-y-0 right-0 w-full max-w-md bg-[#031b25] border-l border-sky-400/30 z-50 flex-col">
  <div class="p-4 border-b border-sky-400/30 flex justify-between items-center"><h3 class="text-lg font-serif font-bold text-sky-300">🛍️ Your Cart</h3><button onclick="toggleCart(false)" class="text-2xl text-gray-400 hover:text-white">×</button></div>
  <div id="citems" class="p-4 space-y-3 overflow-y-auto flex-1"></div>
  <div class="p-4 border-t border-sky-400/30 space-y-3 bg-[#053a39]/50 overflow-y-auto max-h-[60vh]">
@@ -275,7 +286,7 @@ header.scrolled{box-shadow:0 6px 24px rgba(0,0,0,.35)}header.scrolled>div{paddin
 <div id="admin" class="mdl overflow-y-auto"><div class="card w-full max-w-5xl max-h-[92vh] overflow-y-auto space-y-6">
  <div class="flex justify-between items-center border-b border-sky-400/30 pb-3">
   <div><h2 class="text-2xl font-serif font-bold text-sky-300">👑 Owner Admin Portal</h2><p class="text-xs text-gray-400">Products · Orders · Reviews · Complaints · Settings</p></div>
-  <button onclick="hide('admin')" class="text-3xl text-gray-400 hover:text-white">×</button>
+  <button onclick="closeAdmin()" class="text-3xl text-gray-400 hover:text-white">×</button>
  </div>
  <div id="a-login" class="max-w-md mx-auto py-6 space-y-3">
   <p class="text-sm text-center text-sky-200">Owner Password darj karein</p>
@@ -442,7 +453,7 @@ function openProduct(id){
 /* ---------- cart ---------- */
 function addToCart(id){const p=S.products.find(x=>x.id===id);if(!p)return;const c=S.cart.find(i=>i.id===id);c?c.qty++:S.cart.push({id,title:p.title,price:p.price,qty:1});save();renderCart();toggleCart(true)}
 function buyNow(id){const had=S.cart.some(i=>i.id===id);had?toggleCart(true):addToCart(id);setTimeout(()=>{const n=$('o-name');if(n)n.focus()},400)}
-function toggleCart(o){const d=$('cart');o===true?d.classList.remove('translate-x-full'):o===false?d.classList.add('translate-x-full'):d.classList.toggle('translate-x-full');renderCart()}
+function toggleCart(o){const d=$('cart');o===true?d.classList.add('open'):o===false?d.classList.remove('open'):d.classList.toggle('open');renderCart()}
 function qty(id,d){const c=S.cart.find(i=>i.id===id);if(!c)return;c.qty+=d;if(c.qty<=0)S.cart=S.cart.filter(i=>i.id!==id);save();renderCart()}
 function renderCart(){
  $('badge').textContent=S.cart.reduce((s,i)=>s+i.qty,0);
@@ -488,7 +499,10 @@ function renderReviews(){$('rlist').innerHTML=S.reviews.length?S.reviews.map(r=>
 function authTab(t){const l=t==='login';$('f-login').classList.toggle('hidden',!l);$('f-signup').classList.toggle('hidden',l);
  $('t-login').className='flex-1 py-2 text-sm font-bold '+(l?'text-sky-300 border-b-2 border-sky-400':'text-gray-400');$('t-signup').className='flex-1 py-2 text-sm font-bold '+(!l?'text-sky-300 border-b-2 border-sky-400':'text-gray-400')}
 function lock(on){$('shield').classList.toggle('hidden',!on);document.body.style.overflow=on?'hidden':''}
-function openAuth(){authTab(user?'login':'signup');$('logout').classList.toggle('hidden',!user);$('auth-x').classList.toggle('hidden',!user);$('auth-note').classList.toggle('hidden',!!user);show('auth')}
+function openAuth(){const u=!!user;$('auth-role').classList.toggle('hidden',u);$('auth-main').classList.toggle('hidden',!u);$('auth-back').classList.toggle('hidden',u);authTab(u?'login':'signup');$('logout').classList.toggle('hidden',!u);$('auth-x').classList.toggle('hidden',!u);$('auth-note').classList.toggle('hidden',u);show('auth')}
+function pickRole(r){if(r==='owner'){hide('auth');openAdmin();return}$('auth-role').classList.add('hidden');$('auth-main').classList.remove('hidden');$('auth-back').classList.remove('hidden');authTab('signup')}
+function backRole(){$('auth-main').classList.add('hidden');$('auth-role').classList.remove('hidden')}
+function closeAdmin(){if(!$('admin').classList.contains('flex'))return;hide('admin');if(!user)openAuth()}
 function closeAuth(){if(user)hide('auth')}
 function setUser(u){user=u;localStorage.setItem('gw_user',JSON.stringify(u));$('uname').textContent=u?u.name:'Login / Sign Up';lock(!u)}
 function doLogin(e){e.preventDefault();const id=$('l-id').value.trim().toLowerCase(),a=S.accounts.find(x=>x.identifier.toLowerCase()===id&&x.password===$('l-pass').value);
@@ -628,9 +642,9 @@ function mainImg(i,j){const im=S.products[i].images;im.unshift(im.splice(j,1)[0]
 function rmItem(id){S.cart=S.cart.filter(i=>i.id!==id);save();renderCart()}
 
 /* ---------- init (no forced login) ---------- */
-['auth','pmodal','admin'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target.id===id)id==='auth'?closeAuth():hide(id)}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['pmodal','admin'].forEach(hide);closeAuth();toggleCart(false)}});
-captureDefaults();applyContent();applySite();fillCities();fillProductSelect();renderProducts();renderReviews();renderCart();complaintStatus();
+['auth','pmodal','admin'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target.id===id)id==='auth'?closeAuth():id==='admin'?closeAdmin():hide(id)}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){hide('pmodal');closeAdmin();closeAuth();toggleCart(false)}});
+toggleCart(false);captureDefaults();applyContent();applySite();fillCities();fillProductSelect();renderProducts();renderReviews();renderCart();complaintStatus();
 if(user){$('uname').textContent=user.name}else{lock(true);openAuth()}
 
 </script>
