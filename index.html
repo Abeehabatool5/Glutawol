@@ -105,7 +105,7 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="flex items-center gap-3">
    <button onclick="openAuth()" class="btn2 rounded-full">👤 <span id="uname">Login / Sign Up</span></button>
    <button onclick="toggleCart()" class="relative text-2xl">🛍️<span id="badge" class="absolute -top-1 -right-2 bg-sky-400 text-[#031b25] font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span></button>
-   <button onclick="openAdmin()" class="btn2" title="Owner Portal">🛡️ Owner</button>
+   <button onclick="doLogout()" class="btn2" title="Logout">🚪 Logout</button>
   </div>
  </div>
 </header>
@@ -220,6 +220,7 @@ html,body{max-width:100%;overflow-x:hidden}
  <p data-c="footerText">Pure Organic Beauty Products | Nationwide COD Delivery Across Pakistan</p>
  <p class="text-gray-500">Glutawall PK Official · Best Glutathione Brand Glutawall PK · Glutawall Whitening Vault · www.Glutawall.com</p>
  <p class="text-sky-300">CEO: <span data-ceo>Sir Aftab</span></p>
+ <p class="text-gray-600 text-[10px]">v2</p>
 </footer>
 
 <div id="shield" class="fixed inset-0 z-[45] bg-[#010d16]/85 backdrop-blur-md hidden"></div>
@@ -499,7 +500,7 @@ function renderReviews(){$('rlist').innerHTML=S.reviews.length?S.reviews.map(r=>
 function authTab(t){const l=t==='login';$('f-login').classList.toggle('hidden',!l);$('f-signup').classList.toggle('hidden',l);
  $('t-login').className='flex-1 py-2 text-sm font-bold '+(l?'text-sky-300 border-b-2 border-sky-400':'text-gray-400');$('t-signup').className='flex-1 py-2 text-sm font-bold '+(!l?'text-sky-300 border-b-2 border-sky-400':'text-gray-400')}
 function lock(on){$('shield').classList.toggle('hidden',!on);document.body.style.overflow=on?'hidden':''}
-function openAuth(){const u=!!user;$('auth-role').classList.toggle('hidden',u);$('auth-main').classList.toggle('hidden',!u);$('auth-back').classList.toggle('hidden',u);authTab(u?'login':'signup');$('logout').classList.toggle('hidden',!u);$('auth-x').classList.toggle('hidden',!u);$('auth-note').classList.toggle('hidden',u);show('auth')}
+function openAuth(){const u=!!user;$('auth-role').classList.add('hidden');$('auth-main').classList.remove('hidden');$('auth-back').classList.add('hidden');authTab(u?'login':'signup');$('logout').classList.toggle('hidden',!u);$('auth-x').classList.toggle('hidden',!u);$('auth-note').classList.toggle('hidden',u);show('auth')}
 function pickRole(r){if(r==='owner'){hide('auth');openAdmin();return}$('auth-role').classList.add('hidden');$('auth-main').classList.remove('hidden');$('auth-back').classList.remove('hidden');authTab('signup')}
 function backRole(){$('auth-main').classList.add('hidden');$('auth-role').classList.remove('hidden')}
 function closeAdmin(){if(!$('admin').classList.contains('flex'))return;hide('admin');if(!user)openAuth()}
@@ -717,7 +718,7 @@ let t;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(tag,30)}).observe(d
 const hd=document.querySelector('header');addEventListener('scroll',()=>hd.classList.toggle('scrolled',scrollY>20),{passive:true});
 let lastN=-1;const rc=window.renderCart;window.renderCart=function(){rc.apply(this,arguments);const b=$('badge'),n=+b.textContent;if(lastN>=0&&n!==lastN){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}lastN=n};
 /* private owner link: /LoginABEEHA opens the owner panel */
-if(/^\/loginabeeha\/?$/i.test(location.pathname))setTimeout(()=>openAdmin(),400);
+if(/^\/loginabeeha\/?$/i.test(location.pathname))setTimeout(()=>{hide('auth');openAdmin()},400);
 
 /* live Product JSON-LD */
 function ld(){const e=$('ld-products');if(!e)return;e.textContent=JSON.stringify({'@context':'https://schema.org','@type':'ItemList',itemListElement:S.products.map(p=>({'@type':'Product',name:p.title,description:p.description,image:p.images.filter(i=>/^https?:/.test(i)),brand:{'@type':'Brand',name:p.brand},offers:{'@type':'Offer',price:String(p.price),priceCurrency:'PKR',availability:'https://schema.org/InStock'}}))})}
