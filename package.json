@@ -1,0 +1,5 @@
+{
+  "name": "glutawol",
+  "private": true,
+  "scripts": { "build": "node scripts/build.mjs" }
+}

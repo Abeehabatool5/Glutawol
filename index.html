@@ -373,12 +373,7 @@ html,body{max-width:100%;overflow-x:hidden}
 </div></div>
 
 <!-- SUPABASE: sirf neeche "config.js" wale hisse mein URL aur anon key bharein -->
-<script>
-/* config.js */
-/* Fill these two values after creating your Supabase project. Leave empty = site works with browser storage only. */
-window.GW_CONFIG={SUPABASE_URL'',SUPABASE_ANON_KEY:'',TABLE:'gw_store'};
-
-</script>
+<script src="/config.js"></script>
 <script>
 /* app.js */
 const $=id=>document.getElementById(id);
@@ -388,6 +383,8 @@ const show=id=>{$(id).classList.remove('hidden');$(id).classList.add('flex')};
 const hide=id=>{$(id).classList.add('hidden');$(id).classList.remove('flex')};
 const fmt=n=>'Rs. '+Number(n).toLocaleString();
 const today=()=>new Date().toISOString().slice(0,10);
+const pwHash=async(p,s)=>{const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(p),'PBKDF2',false,['deriveBits']);const b=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new TextEncoder().encode(s),iterations:100000},k,256);return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')};
+const mkCred=async p=>{const s=[...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join('');return{pwSalt:s,pwHash:await pwHash(p,s)}};
 
 const DEF_PRODUCTS=[
  {id:'prod-1',brand:'GLUTAWOL',title:'Glutawol Organic Whitening Complete Kit',price:8000,images:['https://images.unsplash.com/photo-1607006344380-b6775a0824a7?auto=format&fit=crop&w=600&q=80'],description:'Complete Organic Skincare Kit! Includes Glutawol Brightening Facewash, Radiance Serum, Organic Night Cream and Whitening Soap.',ingredients:'Glutathione, Alpha Arbutin, Tea Tree Oil, Neem Oil, Virgin Coconut Oil, Vitamin C & E, Niacinamide',usage:'Wash face twice daily with Glutawol Facewash, apply 3-4 drops of Serum, and apply night cream before sleep.',advantages:'Complete routine in one kit\nConvenient multi-step skincare\nClear ingredient and usage information\nAll routine products included',quality:'A complete routine-oriented bundle for customers who want several skincare steps together.',dermatologistRecommended:false},
@@ -397,7 +394,7 @@ const DEF_RATES={Multan:200,Lahore:250,Karachi:350,Islamabad:300,Rawalpindi:300,
 
 const S={products:ld('products',DEF_PRODUCTS),rates:ld('rates',DEF_RATES),cart:ld('cart',[]),orders:ld('orders',[]),complaints:ld('complaints',[]),promos:ld('promos',[]),reviews:ld('reviews',[]),accounts:ld('accounts',[]),
  site:ld('site',{brand:'GLUTAWOL',tagline:'Premium Organic Care',ceo:'Sir Aftab',support:'Direct Owner Contact'})};
-let pass=localStorage.getItem('gw_pass')||'123456789', user=ld('user',null), pct=0, galImgs=[];
+localStorage.removeItem('gw_pass');let user=ld('user',null), pct=0, galImgs=[];
 S.products=S.products.map(p=>({...p,images:(p.images&&p.images.length?p.images:(p.image?[p.image]:[])).filter(Boolean)}));
 
 function save(){try{for(const k in S)localStorage.setItem('gw_'+k,JSON.stringify(S[k]));const ss=$('save-state');if(ss)ss.textContent='✓ Saved '+new Date().toLocaleTimeString();return true}catch(e){alert('Browser storage full. Kuch purani images delete karein.');return false}}
@@ -506,17 +503,18 @@ function backRole(){$('auth-main').classList.add('hidden');$('auth-role').classL
 function closeAdmin(){if(!$('admin').classList.contains('flex'))return;hide('admin');if(!user)openAuth()}
 function closeAuth(){if(user)hide('auth')}
 function setUser(u){user=u;localStorage.setItem('gw_user',JSON.stringify(u));$('uname').textContent=u?u.name:'Login / Sign Up';lock(!u)}
-function doLogin(e){e.preventDefault();const id=$('l-id').value.trim().toLowerCase(),a=S.accounts.find(x=>x.identifier.toLowerCase()===id&&x.password===$('l-pass').value);
- if(!a)return alert('Account nahi mila ya password ghalat hai.');setUser({name:a.name,identifier:a.identifier});hide('auth');e.target.reset()}
-function doSignup(e){e.preventDefault();const id=$('s-id').value.trim();
+async function doLogin(e){e.preventDefault();const f=e.target,id=$('l-id').value.trim().toLowerCase(),pw=$('l-pass').value,a=S.accounts.find(x=>x.identifier.toLowerCase()===id);let ok=false;
+ if(a){if(a.pwHash)ok=(await pwHash(pw,a.pwSalt))===a.pwHash;else if(a.password!==undefined&&a.password===pw){ok=true;Object.assign(a,await mkCred(pw));delete a.password;save()}}
+ if(!ok)return alert('Account nahi mila ya password ghalat hai.');setUser({name:a.name,identifier:a.identifier});hide('auth');f.reset()}
+async function doSignup(e){e.preventDefault();const f=e.target,id=$('s-id').value.trim();
  if(S.accounts.some(a=>a.identifier.toLowerCase()===id.toLowerCase())){alert('Yeh account pehle se maujood hai, login karein.');authTab('login');return}
- S.accounts.push({name:$('s-name').value.trim(),identifier:id,city:$('s-city').value.trim(),password:$('s-pass').value});save();
- setUser({name:$('s-name').value.trim(),identifier:id});hide('auth');e.target.reset();alert('Account ban gaya!')}
+ S.accounts.push({name:$('s-name').value.trim(),identifier:id,city:$('s-city').value.trim(),...await mkCred($('s-pass').value)});save();
+ setUser({name:$('s-name').value.trim(),identifier:id});hide('auth');f.reset();alert('Account ban gaya!')}
 function doLogout(){setUser(null);openAuth()}
 
 /* ---------- admin ---------- */
 function openAdmin(){$('a-login').classList.remove('hidden');$('a-main').classList.add('hidden');$('a-pass').value='';show('admin');setTimeout(()=>$('a-pass').focus(),80)}
-function adminLogin(){if($('a-pass').value!==pass){$('a-pass').value='';return alert('Password ghalat hai.')}
+function adminLogin(){$('a-pass').value='';return alert('Owner login ke liye Supabase configure karna zaroori hai (README dekhein).');
  $('a-login').classList.add('hidden');$('a-main').classList.remove('hidden');adminAll();
  $('w-brand').value=S.site.brand;$('w-tag').value=S.site.tagline;$('w-ceo').value=S.site.ceo;$('w-sup').value=S.site.support}
 function adminAll(){adminStats();adminRates();adminOrders();adminComps();adminProds();adminRevs();adminPromos();adminContent();adminUsers();fillManual()}
@@ -579,9 +577,7 @@ function adminPromos(){$('a-promos').innerHTML=S.promos.map(p=>`<span class="bdg
 function addPromo(){const c=$('n-code').value.trim().toUpperCase(),p=parseInt($('n-pct').value);if(!c||isNaN(p)||p<1||p>90)return alert('Code aur 1-90% discount darj karein.');
  S.promos=S.promos.filter(x=>x.code!==c);S.promos.push({code:c,percent:p});save();adminPromos();$('n-code').value=$('n-pct').value=''}
 function delPromo(c){S.promos=S.promos.filter(p=>p.code!==c);save();adminPromos()}
-function changePass(){const c=$('p-cur').value,n=$('p-new').value,k=$('p-con').value;
- if(c!==pass)return alert('Current password ghalat hai.');if(n.length<6)return alert('Naya password kam az kam 6 characters ka ho.');if(n!==k)return alert('Passwords match nahi karte.');
- pass=n;localStorage.setItem('gw_pass',n);['p-cur','p-new','p-con'].forEach(i=>$(i).value='');alert('Password change ho gaya.')}
+function changePass(){alert('Owner password ab Supabase Auth se manage hota hai (Supabase > Authentication > Users).')}
 function saveSite(){S.site={brand:$('w-brand').value.trim()||'GLUTAWOL',tagline:$('w-tag').value.trim()||'Premium Organic Care',ceo:$('w-ceo').value.trim()||'Sir Aftab',support:$('w-sup').value.trim()||'Direct Owner Contact'};save();applySite();alert('Settings save ho gayi.')}
 function applySite(){document.title=S.site.brand+' | Official Skincare Store';$('brand').textContent=$('brand2').textContent=S.site.brand;$('tagline').textContent=S.site.tagline;$('support').textContent=S.site.support;document.querySelectorAll('[data-ceo]').forEach(e=>e.textContent=S.site.ceo)}
 
@@ -622,13 +618,13 @@ function adminContent(){$('a-content').innerHTML=Object.keys(LABELS).map(k=>`<di
 function setContent(k,v){v=v.trim();if(!v)return resetContent(k);S.content[k]=v;save();applyContent()}
 function resetContent(k){delete S.content[k];save();const e=document.querySelector('[data-c="'+k+'"]');if(e&&DEF_C[k]!==undefined)e.textContent=DEF_C[k];adminContent()}
 function adminUsers(){$('ucount').textContent=S.accounts.length;$('a-users').innerHTML=S.accounts.length?S.accounts.map((a,i)=>`<div class="bg-[#031b1b] p-3 rounded-lg border border-sky-400/30 flex flex-wrap justify-between gap-2 text-xs"><div><b class="text-sky-300">${esc(a.name)}</b> · ${esc(a.identifier)} · ${esc(a.city)}</div><div class="flex gap-1"><button class="btn2" onclick="editUser(${i})">✏ Edit</button><button class="btn2" onclick="resetUserPass(${i})">🔑 Reset Password</button><button class="dng" onclick="delUser(${i})">🗑</button></div></div>`).join(''):'<p class="text-xs text-gray-400">Abhi koi registered customer nahi.</p>'}
-function addUser(){const n=$('u-name').value.trim(),id=$('u-id').value.trim(),c=$('u-city').value.trim(),p=$('u-pass').value;
+async function addUser(){const n=$('u-name').value.trim(),id=$('u-id').value.trim(),c=$('u-city').value.trim(),p=$('u-pass').value;
  if(!n||!id||!c||p.length<6)return alert('Sab fields bharein; password kam az kam 6 characters.');
  if(S.accounts.some(a=>a.identifier.toLowerCase()===id.toLowerCase()))return alert('Yeh account pehle se maujood hai.');
- S.accounts.push({name:n,identifier:id,city:c,password:p});save();adminUsers();['u-name','u-id','u-city','u-pass'].forEach(i=>$(i).value='')}
+ S.accounts.push({name:n,identifier:id,city:c,...await mkCred(p)});save();adminUsers();['u-name','u-id','u-city','u-pass'].forEach(i=>$(i).value='')}
 function editUser(i){const a=S.accounts[i];if(!a)return;const n=prompt('Name:',a.name);if(n===null)return;const c=prompt('City:',a.city);if(c===null)return;
  a.name=n.trim()||a.name;a.city=c.trim()||a.city;if(user&&user.identifier===a.identifier)setUser({...user,name:a.name});save();adminUsers()}
-function resetUserPass(i){const p=prompt('Naya password (6+ characters):');if(p===null)return;if(p.length<6)return alert('Password kam az kam 6 characters ka ho.');S.accounts[i].password=p;save();alert('Password badal diya gaya.')}
+async function resetUserPass(i){const p=prompt('Naya password (6+ characters):');if(p===null)return;if(p.length<6)return alert('Password kam az kam 6 characters ka ho.');Object.assign(S.accounts[i],await mkCred(p));delete S.accounts[i].password;save();alert('Password badal diya gaya.')}
 function delUser(i){if(!confirm('Yeh customer account delete karein?'))return;const a=S.accounts.splice(i,1)[0];save();adminUsers();if(user&&user.identifier===a.identifier){hide('admin');setUser(null);openAuth()}}
 function fillManual(){const c=$('mo-city'),p=$('mo-prod');if(!c||!p)return;c.innerHTML=Object.keys(S.rates).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');p.innerHTML=S.products.map(x=>`<option value="${x.id}">${esc(x.title)} (${fmt(x.price)})</option>`).join('')}
 function addManualOrder(){const name=$('mo-name').value.trim(),ph=$('mo-phone').value.replace(/[\s-]/g,''),addr=$('mo-addr').value.trim(),city=$('mo-city').value,pr=S.products.find(x=>x.id===$('mo-prod').value),q=Math.max(1,parseInt($('mo-qty').value)||1);
