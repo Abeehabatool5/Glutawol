@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://glutawoloffical.netlify.app/sitemap.xml
+Disallow: /LoginABEEHA
+# The build (scripts/build.mjs) generates the final robots.txt in dist/ with your real domain.
